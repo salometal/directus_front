@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Music Sync</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    audio {
+      width: 100%;
+    }
+    .logout {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 6px 12px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="logout">
+    <button onclick="logout()">Logout</button>
+  </div>
+  <h1>Brani Musicali</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Titolo</th>
+        <th>Autore</th>
+        <th>Generi</th>
+        <th>Durata</th>
+        <th>Audio</th>
+      </tr>
+    </thead>
+    <tbody id="songs-table"></tbody>
+  </table>
+
+  <script>
+    async function fetchSongs() {
+      const token = localStorage.getItem('token');
+      if (!token) return window.location.href = 'index.html';
+
+      const res = await fetch('https://TUA-API-DIRECTUS.onrender.com/items/songs?fields=title,author,duration,genres.name,file', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const json = await res.json();
+      const songs = json.data;
+
+      const tbody = document.getElementById('songs-table');
+      tbody.innerHTML = '';
+
+      songs.forEach(song => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${song.title || ''}</td>
+          <td>${song.author || ''}</td>
+          <td>${(song.genres || []).map(g => g.name).join(', ')}</td>
+          <td>${song.duration || ''}</td>
+          <td>${song.file ? `<audio controls src="https://TUA-API-DIRECTUS.onrender.com/assets/${song.file}"></audio>` : ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    }
+
+    fetchSongs();
+  </script>
+</body>
+</html>
